@@ -1,5 +1,5 @@
 // Offline support: cache the app shell, serve it cache-first, refresh in the background.
-const CACHE = 'dinaplana-v2.0.1';
+const CACHE = 'dinaplana-v2.0.2';
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon.svg', 'favicon.ico'];
 
 self.addEventListener('install', e => {

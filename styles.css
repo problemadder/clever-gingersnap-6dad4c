@@ -145,13 +145,13 @@ button.chip.on { background: var(--accent); color: var(--accent-ink); }
 
 /* planner */
 .weeknav { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.day { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px 14px; display: flex; gap: 12px; align-items: center; }
+.day { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 12px; display: flex; gap: 8px; align-items: center; }
 .day.today { outline: 2px solid var(--accent); }
-.day .dname { width: 64px; flex: none; }
+.day .dname { width: 42px; flex: none; }
 .day .dname b { display: block; }
-.day .planned { flex: 1; min-width: 0; display: flex; gap: 10px; align-items: center; background: var(--accent-soft); border-radius: 10px; padding: 6px; border: 0; cursor: pointer; text-align: left; }
-.day .planned img, .day .planned .noimg { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex: none; background: var(--card); display: grid; place-items: center; }
-.day .planned .nm { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.day .planned { flex: 1; min-width: 0; display: flex; gap: 8px; align-items: center; background: var(--accent-soft); border-radius: 10px; padding: 6px; border: 0; cursor: pointer; text-align: left; }
+.day .planned img, .day .planned .noimg { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; background: var(--card); display: grid; place-items: center; }
+.day .planned .nm { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
 .day select { flex: 1; min-width: 0; }
 
 /* shopping */
