@@ -730,5 +730,12 @@ document.addEventListener('keydown', e => {
     if (photoURLs.size) render();
   } catch (e) { console.warn('Photos unavailable', e); }
   navigator.storage?.persist?.();      // ask the browser not to evict our data
-  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js');
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    // A new version took over: reload once so it's used right away (not when an editor is open).
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (hadController && !state.draft) location.reload();
+    });
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
+  }
 })();
