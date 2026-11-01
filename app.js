@@ -219,8 +219,8 @@ function viewMeals() {
   return `<div class="stack">
     <div class="card stack">
       <div class="row">
-        <div class="searchbar grow">${icon('search')}<input class="field" type="search" id="q" placeholder="Search name, ingredient, recipe…" value="${esc(state.query)}"></div>
-        <select class="field" id="sort" style="width:auto" aria-label="Sort">
+        <div class="searchbar">${icon('search')}<input class="field" type="search" id="q" placeholder="Search name, ingredient, recipe…" value="${esc(state.query)}"></div>
+        <select class="field" id="sort" style="flex:1 1 150px;width:auto" aria-label="Sort">
           ${[['recent', 'Recently cooked'], ['oldest', 'Not had in a while'], ['rating', 'Best rated'], ['name', 'A–Z']]
             .map(([v, l]) => `<option value="${v}" ${state.settings.sort === v ? 'selected' : ''}>${l}</option>`).join('')}
         </select>
@@ -250,8 +250,8 @@ function viewPlanner() {
         ${state.weekOffset ? `<br><button class="chip" data-action="week" data-d="0">Back to this week</button>` : ''}</div>
       <button class="btn icon-only" data-action="week" data-d="1" aria-label="Next week">${icon('right')}</button>
     </div>
-    <div class="row">
-      <button class="btn grow" data-action="fill-week" ${state.meals.length ? '' : 'disabled'}>${icon('dice')} Fill empty days</button>
+    <div class="toolbar">
+      <button class="btn" data-action="fill-week" ${state.meals.length ? '' : 'disabled'}>${icon('dice')} Fill empty days</button>
       <button class="btn" data-action="share-week">${icon('share')} Share</button>
       <button class="btn" data-action="print-week">${icon('printer')} Print</button>
     </div>
@@ -302,8 +302,8 @@ function viewShopping() {
       <b>Shopping · week of ${days[0].toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</b>
       <button class="btn icon-only" data-action="week" data-d="1" aria-label="Next week">${icon('right')}</button>
     </div>
-    ${items.length ? `<div class="row">
-      <button class="btn grow" data-action="share-shop">${icon('share')} Share list</button>
+    ${items.length ? `<div class="toolbar">
+      <button class="btn" data-action="share-shop">${icon('share')} Share list</button>
       <button class="btn" data-action="print-shop">${icon('printer')} Print</button>
       <button class="btn" data-action="uncheck-shop">Uncheck all</button></div>
     <div class="card shop"><ul>${items.map(it => {

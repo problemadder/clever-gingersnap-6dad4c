@@ -98,7 +98,14 @@ label.lbl { display: block; font-size: .85rem; font-weight: 600; color: var(--mu
 button.chip { cursor: pointer; }
 button.chip.on { background: var(--accent); color: var(--accent-ink); }
 .empty { text-align: center; color: var(--muted); padding: 32px 16px; }
-.searchbar { position: relative; }
+.searchbar { position: relative; flex: 3 1 240px; }
+/* first button spans the full width on phones, the rest share the next line */
+.toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.toolbar > :first-child { grid-column: 1 / -1; }
+@media (min-width: 560px) {
+  .toolbar { grid-template-columns: 2fr 1fr 1fr; }
+  .toolbar > :first-child { grid-column: auto; }
+}
 .searchbar .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
 .searchbar .field { padding-left: 38px; }
 
