@@ -38,7 +38,8 @@
   }
 }
 
-* { box-sizing: border-box; }
+/* touch-action: manipulation turns off double-tap-to-zoom (pinch zoom still works) */
+* { box-sizing: border-box; touch-action: manipulation; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
@@ -152,7 +153,19 @@ button.chip.on { background: var(--accent); color: var(--accent-ink); }
 .day .planned { flex: 1; min-width: 0; display: flex; gap: 8px; align-items: center; background: var(--accent-soft); border-radius: 10px; padding: 6px; border: 0; cursor: pointer; text-align: left; }
 .day .planned img, .day .planned .noimg { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; flex: none; background: var(--card); display: grid; place-items: center; }
 .day .planned .nm { font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
-.day select { flex: 1; min-width: 0; }
+.day .pick-btn { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; color: var(--muted); cursor: pointer; text-align: left; border-style: dashed; }
+
+/* planner meal picker */
+.pick-head { position: sticky; top: 0; z-index: 2; background: var(--card); padding: 16px 16px 10px; border-bottom: 1px solid var(--line); display: grid; gap: 10px; }
+.chips.scroll-x { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.chips.scroll-x .chip { flex: none; padding: 4px 12px; font-size: .85rem; }
+.pick-list { padding: 6px 8px 16px; }
+.pick-item { width: 100%; display: flex; gap: 12px; align-items: center; padding: 8px; border: 0; background: none; border-radius: 10px; cursor: pointer; text-align: left; }
+.pick-item:hover, .pick-item:active { background: var(--accent-soft); }
+.pick-item img, .pick-item .noimg { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex: none; background: var(--accent-soft); display: grid; place-items: center; }
+.pick-item .nm { display: block; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
+.pick-item b { color: var(--accent-text); font-weight: 600; }
+@media (max-width: 699px) { .sheet:has(.pick-head) { height: 92vh; } }
 
 /* shopping */
 .shop li { list-style: none; display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid var(--line); }

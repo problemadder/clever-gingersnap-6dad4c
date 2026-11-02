@@ -147,6 +147,7 @@ const state = {
   weekOffset: 0,
   sheet: null,                         // { type: 'detail'|'edit', id }
   draft: null,                         // editor draft
+  pick: null,                          // planner meal picker: { q, tag }
 };
 const persist = {
   meals: () => save(KEYS.meals, state.meals),
@@ -241,8 +242,6 @@ function listHTML() {
 function viewPlanner() {
   const days = weekDays();
   const today = dateKey(new Date());
-  const options = [...state.meals].sort((a, b) => a.name.localeCompare(b.name))
-    .map(m => `<option value="${m.id}">${esc(m.name)} · ${m.rating}★</option>`).join('');
   return `<div class="stack">
     <div class="card weeknav">
       <button class="btn icon-only" data-action="week" data-d="-1" aria-label="Previous week">${icon('left')}</button>
@@ -266,7 +265,7 @@ function viewPlanner() {
                 <span class="grow"><span class="nm" style="display:block">${esc(m.name)}</span><span class="muted small">${stars(m.rating)}</span></span>
               </button>
               <button class="btn icon-only" data-action="unplan" data-k="${k}" aria-label="Remove">${icon('x')}</button>`
-            : `<select class="field" data-plan="${k}" ${state.meals.length ? '' : 'disabled'}><option value="">${state.meals.length ? 'Choose a meal…' : 'Add meals first'}</option>${options}</select>
+            : `<button class="field pick-btn" data-action="pick" data-k="${k}" ${state.meals.length ? '' : 'disabled'}>${icon('plus')} ${state.meals.length ? 'Choose a meal' : 'Add meals first'}</button>
                <button class="btn icon-only" data-action="suggest" data-k="${k}" aria-label="Suggest a meal" title="Surprise me" ${state.meals.length ? '' : 'disabled'}>${icon('dice')}</button>`}
       </div>`;
     }).join('')}
@@ -365,6 +364,7 @@ function closeSheet(fromPop = false) {
   if (!state.sheet) return;
   state.sheet = null;
   state.draft = null;
+  state.pick = null;
   releaseWakeLock();
   sheetRoot.innerHTML = '';
   document.body.style.overflow = '';
@@ -377,7 +377,7 @@ function renderSheet() {
   if (!s) return;
   document.body.style.overflow = 'hidden';
   sheetRoot.innerHTML = `<div class="sheet-backdrop" data-action="backdrop"><div class="sheet" role="dialog" aria-modal="true">
-    ${s.type === 'detail' ? detailHTML(mealById(s.id)) : editHTML()}</div></div>`;
+    ${s.type === 'detail' ? detailHTML(mealById(s.id)) : s.type === 'pick' ? pickHTML(s.key) : editHTML()}</div></div>`;
   if (s.type === 'edit') $('#e-name')?.focus({ preventScroll: true });
 }
 
@@ -407,6 +407,45 @@ function detailHTML(m) {
       ${'wakeLock' in navigator ? `<label class="row small muted"><input type="checkbox" id="wake"> Keep screen on while cooking</label>` : ''}
       <button class="btn danger" data-action="delete" data-id="${m.id}">${icon('trash')} Delete meal</button>
     </div>`;
+}
+
+/* Planner meal picker: searchable list instead of one long dropdown.
+ * Meals not had for the longest come first; ones already planned this week go last. */
+function pickHTML(key) {
+  const [y, mo, d] = key.split('-').map(Number);
+  const day = new Date(y, mo - 1, d);
+  const tags = allTags();
+  return `
+    <div class="pick-head">
+      <div class="row"><h2 class="grow" style="margin:0">Dinner for ${DAY_NAMES[day.getDay()]} <span class="muted">${d}.${mo}.</span></h2>
+        <button class="btn icon-only" data-action="close" aria-label="Close">${icon('x')}</button></div>
+      <div class="row">
+        <div class="searchbar">${icon('search')}<input class="field" type="search" id="pick-q" placeholder="Search meals…" value="${esc(state.pick.q)}" enterkeyhint="search"></div>
+        <button class="btn" data-action="pick-random">${icon('dice')} Surprise me</button>
+      </div>
+      ${tags.length ? `<div class="chips scroll-x">${tags.map(t =>
+        `<button class="chip ${state.pick.tag === t ? 'on' : ''}" data-action="pick-tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+    </div>
+    <div id="pick-list" class="pick-list">${pickListHTML()}</div>`;
+}
+function pickListHTML() {
+  const q = state.pick.q.trim().toLowerCase();
+  const thisWeek = new Set(weekDays().map(d => state.plan[dateKey(d)]?.id).filter(id => id != null).map(String));
+  const list = state.meals
+    .filter(m => (!q || [m.name, m.ingredients, (m.tags || []).join(' ')].join(' ').toLowerCase().includes(q))
+      && (!state.pick.tag || (m.tags || []).includes(state.pick.tag)))
+    .sort((a, b) => thisWeek.has(String(a.id)) - thisWeek.has(String(b.id))
+      || new Date(a.lastEaten || 0) - new Date(b.lastEaten || 0));
+  if (!list.length) return `<p class="empty">No meals match.</p>`;
+  return list.map(m => {
+    const url = photoURL(m.id);
+    const planned = thisWeek.has(String(m.id));
+    return `<button class="pick-item" data-action="pick-meal" data-id="${m.id}">
+      ${url ? `<img src="${url}" alt="" loading="lazy">` : '<span class="noimg">🍽️</span>'}
+      <span class="grow"><span class="nm">${esc(m.name)}</span>
+        <span class="muted small"><span class="stars">${stars(m.rating)}</span> · ${planned ? '<b>planned this week</b>' : `last ${agoText(m.lastEaten)}`}</span></span>
+    </button>`;
+  }).join('');
 }
 
 function startEdit(id) {
@@ -666,6 +705,19 @@ document.addEventListener('click', async e => {
     case 'week': state.weekOffset = el.dataset.d === '0' ? 0 : state.weekOffset + +el.dataset.d; render(); break;
     case 'unplan': { const p = { ...state.plan }; delete p[el.dataset.k]; state.plan = p; persist.plan(); render(); break; }
     case 'suggest': planMeal(el.dataset.k, suggestMeal()); render(); break;
+    case 'pick': state.pick = { q: '', tag: '' }; openSheet({ type: 'pick', key: el.dataset.k }); break;
+    case 'pick-tag':
+      state.pick.tag = state.pick.tag === el.dataset.tag ? '' : el.dataset.tag;
+      $('#pick-list').innerHTML = pickListHTML();
+      document.querySelectorAll('[data-action=pick-tag]').forEach(c => c.classList.toggle('on', c.dataset.tag === state.pick.tag));
+      break;
+    case 'pick-meal':
+    case 'pick-random': {
+      const key = state.sheet.key;
+      planMeal(key, action === 'pick-random' ? suggestMeal() : m);
+      closeSheet(); render();
+      break;
+    }
     case 'fill-week': {
       let n = 0;
       weekDays().forEach(d => { const k = dateKey(d); if (!state.plan[k]) { planMeal(k, suggestMeal()); n++; } });
@@ -689,6 +741,7 @@ document.addEventListener('click', async e => {
 document.addEventListener('input', e => {
   const t = e.target;
   if (t.id === 'q') { state.query = t.value; $('#list').innerHTML = listHTML(); }
+  else if (t.id === 'pick-q' && state.pick) { state.pick.q = t.value; $('#pick-list').innerHTML = pickListHTML(); }
   else if (t.dataset.draft && state.draft) state.draft[t.dataset.draft] = t.value;
 });
 
@@ -696,10 +749,7 @@ document.addEventListener('change', async e => {
   const t = e.target;
   if (t.id === 'sort') { state.settings.sort = t.value; persist.settings(); $('#list').innerHTML = listHTML(); }
   else if (t.id === 'weekstart') { state.settings.weekStart = +t.value; persist.settings(); toast('Saved'); }
-  else if (t.dataset.plan) {
-    const meal = mealById(t.value);
-    if (meal) { planMeal(t.dataset.plan, meal); render(); }
-  } else if (t.dataset.shop != null) {
+  else if (t.dataset.shop != null) {
     const k = `${dateKey(currentWeekStart())}|${t.dataset.shop}`;
     if (t.checked) state.shop[k] = true; else delete state.shop[k];
     persist.shop();

@@ -1,6 +1,6 @@
 // Offline support: network-first so updates show up right away; the cached app shell
 // is only used when offline (or when the network takes longer than a few seconds).
-const CACHE = 'dinaplana-v2.0.3';
+const CACHE = 'dinaplana-v2.0.5';
 const TIMEOUT_MS = 3000;
 const SHELL = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon.svg', 'favicon.ico'];
 
